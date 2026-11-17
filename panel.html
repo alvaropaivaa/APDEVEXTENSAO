@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <title>AP Dev Clone</title>
+    <link rel="stylesheet" href="src/ui.css" />
+    <style>
+      body {
+        display: flex;
+        flex-direction: column;
+        padding: 14px 14px 18px;
+        gap: 13px;
+        min-width: 300px;
+      }
+
+      /* alvo -------------------------------------------------- */
+      #target {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 11px 12px;
+      }
+      #target-icon {
+        width: 22px;
+        height: 22px;
+        flex: none;
+        border-radius: 5px;
+        object-fit: contain;
+        background: var(--card-2);
+      }
+      #target-text {
+        min-width: 0;
+        flex: 1;
+      }
+      #target-title {
+        display: block;
+        font-size: 12.5px;
+        font-weight: 570;
+      }
+      #target-url {
+        display: block;
+        color: var(--dim);
+      }
+
+      /* opções ------------------------------------------------ */
+      #opts {
+        margin-top: 4px;
+        padding-top: 4px;
+        border-top: 1px solid var(--line-soft);
+      }
+
+      /* progresso --------------------------------------------- */
+      #running {
+        display: flex;
+        flex-direction: column;
+        gap: 9px;
+        padding: 13px;
+      }
+      #step {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12.5px;
+      }
+      #step-text {
+        flex: 1;
+        min-width: 0;
+      }
+      #pct {
+        color: var(--brand);
+        font-variant-numeric: tabular-nums;
+        font-size: 11.5px;
+        font-weight: 620;
+        flex: none;
+      }
+
+      /* resultado --------------------------------------------- */
+      #done {
+        padding: 13px;
+      }
+      #done-head {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        color: var(--ok);
+        font-weight: 620;
+        font-size: 12.5px;
+        margin-bottom: 9px;
+      }
+      #done-head svg {
+        width: 15px;
+        height: 15px;
+        flex: none;
+      }
+      #done-file {
+        display: block;
+        font-size: 12.5px;
+        font-weight: 600;
+      }
+      #done-what {
+        display: block;
+        font-size: 11.5px;
+      }
+      #done-sub {
+        display: block;
+        color: var(--brand-deep);
+        background: var(--brand-wash);
+        border-radius: 7px;
+        padding: 5px 9px;
+        font-size: 11.5px;
+        font-weight: 550;
+        margin: 9px 0 12px;
+      }
+      #done-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 7px;
+      }
+      /* Eram três botões e o "Clonar de novo" ocupava a linha inteira. Com o
+         quarto, a grade fecha certinho em 2x2 e o span só deixaria um buraco. */
+
+      /* avisos ------------------------------------------------ */
+      #missing {
+        border: 1px solid #f0dcb4;
+        background: var(--warn-wash);
+        color: var(--warn);
+        border-radius: var(--r);
+        padding: 11px 12px;
+        font-size: 12px;
+      }
+      #fatal {
+        border: 1px solid #f3ccc7;
+        background: var(--err-wash);
+        color: var(--err);
+        border-radius: var(--r);
+        padding: 12px;
+        font-size: 12.5px;
+      }
+
+      /* log --------------------------------------------------- */
+      #log {
+        max-height: 240px;
+        overflow: auto;
+        margin: 8px 0 0;
+        padding: 0;
+        list-style: none;
+        font-size: 11.5px;
+      }
+      #log li {
+        padding: 4px 0;
+        display: flex;
+        gap: 8px;
+        border-top: 1px solid var(--line-soft);
+      }
+      #log li:first-child {
+        border-top: 0;
+      }
+      #log .tag {
+        flex: none;
+        width: 58px;
+        color: var(--dim);
+        font-family: "Cascadia Code", Consolas, monospace;
+        font-size: 10.5px;
+        padding-top: 1px;
+      }
+      #log .ok .tag {
+        color: var(--ok);
+      }
+      #log .warn .tag {
+        color: var(--warn);
+      }
+      #log .err .tag {
+        color: var(--err);
+      }
+      #log .msg {
+        min-width: 0;
+        word-break: break-word;
+        color: var(--muted);
+      }
+    </style>
+  </head>
+  <body>
+    <header class="marca">
+      <img class="logo" src="icons/apdev-green.png" alt="AP Dev Clone" />
+      <div>
+        <h1 id="marca-nome">AP Dev Clone</h1>
+        <span class="tagline" id="marca-tagline">Clonador de sites</span>
+      </div>
+    </header>
+
+    <div id="target" class="card">
+      <img id="target-icon" alt="" />
+      <span id="target-text">
+        <b class="truncate" id="target-title">—</b>
+        <span class="truncate mono" id="target-url">—</span>
+      </span>
+    </div>
+
+    <!-- estado 1: parado ------------------------------------- -->
+    <section id="idle">
+      <button class="btn btn-primary btn-block" id="go">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3v12" />
+          <path d="m7 12 5 5 5-5" />
+          <path d="M4 21h16" />
+        </svg>
+        Clonar esta página
+      </button>
+
+      <button class="btn btn-block" id="pick" style="margin-top: 7px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2v4M12 18v4M2 12h4M18 12h4" />
+          <rect x="8" y="8" width="8" height="8" rx="1" />
+        </svg>
+        Clonar só um componente
+      </button>
+      <p class="dim" id="pick-hint" style="margin: 7px 2px 0; font-size: 11.5px">
+        Abre uma barra na página para você apontar o pedaço que quer copiar.
+      </p>
+
+      <button class="btn btn-block" id="go-site" style="margin-top: 7px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="9" />
+          <path d="M3 12h18M12 3a15 15 0 0 1 0 18a15 15 0 0 1 0-18" />
+        </svg>
+        Clonar o site inteiro
+      </button>
+      <p class="dim" id="site-hint" style="margin: 7px 2px 0; font-size: 11.5px">
+        Segue os links desta página — inclusive os dos produtos — e sai um ZIP
+        que navega offline. Cada página abre numa aba na sua frente.
+      </p>
+
+      <div id="opts">
+        <button class="btn-quiet" id="opts-toggle" aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m9 6 6 6-6 6" />
+          </svg>
+          Opções
+        </button>
+        <div id="opts-body" class="hidden">
+          <label class="numero">
+            <span>
+              <b>Teto de páginas do site</b>
+              <small>Quantas páginas o "Clonar o site inteiro" visita, contando
+              a de entrada. Cada uma leva uns 10 segundos.</small>
+            </span>
+            <input type="number" id="limite-paginas" min="1" max="200" step="1" value="20" />
+          </label>
+          <label class="toggle">
+            <input type="checkbox" id="opt-keepScripts" checked />
+            <span class="track"></span>
+            <span>
+              <b>Manter o JavaScript do site</b>
+              <small>Traz carrossel, menu e animação de rolagem. Se a cópia abrir
+              em branco, o site se redesenha sozinho — desligue aqui.</small>
+            </span>
+          </label>
+          <label class="toggle">
+            <input type="checkbox" id="opt-autoScroll" checked />
+            <span class="track"></span>
+            <span>
+              <b>Rolar a página antes de copiar</b>
+              <small>É o que faz as imagens preguiçosas aparecerem.</small>
+            </span>
+          </label>
+          <label class="toggle">
+            <input type="checkbox" id="opt-slowScan" checked />
+            <span class="track"></span>
+            <span>
+              <b>Varredura lenta</b>
+              <small>Espera cada animação terminar antes de seguir.</small>
+            </span>
+          </label>
+          <label class="toggle">
+            <input type="checkbox" id="opt-unlockAnimations" checked />
+            <span class="track"></span>
+            <span>
+              <b>Destravar animações de entrada</b>
+              <small>AOS, GSAP e afins deixam o elemento invisível esperando o scroll.</small>
+            </span>
+          </label>
+          <label class="toggle">
+            <input type="checkbox" id="opt-animarNaCopia" checked />
+            <span class="track"></span>
+            <span>
+              <b>Refazer as animações de entrada</b>
+              <small>A cópia anima sozinha o que aparecia com a rolagem, sem
+              depender do GSAP/AOS do site subir — que num arquivo estático quase
+              nunca sobe.</small>
+            </span>
+          </label>
+          <label class="toggle">
+            <input type="checkbox" id="opt-capturarRede" checked />
+            <span class="track"></span>
+            <span>
+              <b>Puxar tudo que o JavaScript baixou</b>
+              <small>Modelo 3D, textura, mapa de ambiente, Lottie, wasm e pedaço
+              de bundle. Nada disso está escrito no HTML — sem isto a cena 3D não
+              vem. Recarregue a página (F5) antes de clonar.</small>
+            </span>
+          </label>
+          <label class="toggle">
+            <input type="checkbox" id="opt-manter3D" checked />
+            <span class="track"></span>
+            <span>
+              <b>Manter o 3D vivo</b>
+              <small>WebGL/WebGPU continua rodando na cópia em vez de virar
+              figura. O quadro congelado fica de fundo, por garantia.</small>
+            </span>
+          </label>
+          <label class="toggle">
+            <input type="checkbox" id="opt-shimOffline" checked />
+            <span class="track"></span>
+            <span>
+              <b>Desviar as buscas para os arquivos locais</b>
+              <small>Sem isto o site clonado pede o modelo 3D à internet e a cena
+              não monta offline.</small>
+            </span>
+          </label>
+          <label class="toggle">
+            <input type="checkbox" id="opt-capturarIframes" checked />
+            <span class="track"></span>
+            <span>
+              <b>Entrar nos &lt;iframe&gt;</b>
+              <small>Player de vídeo, Spline, Sketchfab e mapa moram dentro de
+              um. Sem isto sobra um retângulo vazio.</small>
+            </span>
+          </label>
+          <label class="toggle">
+            <input type="checkbox" id="opt-resgatarBlobs" checked />
+            <span class="track"></span>
+            <span>
+              <b>Salvar o que está só na memória</b>
+              <small>Imagem e vídeo em blob: somem quando a aba fecha. Aqui eles
+              viram parte do arquivo.</small>
+            </span>
+          </label>
+          <label class="toggle">
+            <input type="checkbox" id="opt-freezeCanvas" checked />
+            <span class="track"></span>
+            <span>
+              <b>Congelar &lt;canvas&gt; 2D</b>
+              <small>Vira PNG em vez de quadro vazio. Não vale para o 3D quando o
+              "manter vivo" está ligado.</small>
+            </span>
+          </label>
+          <label class="toggle">
+            <input type="checkbox" id="opt-inlineShadowDom" checked />
+            <span class="track"></span>
+            <span>
+              <b>Incluir Shadow DOM</b>
+              <small>Para site feito com Web Components.</small>
+            </span>
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <!-- estado 2: rodando ------------------------------------ -->
+    <section id="running" class="card hidden">
+      <div id="step">
+        <span class="spinner"></span>
+        <span class="truncate" id="step-text">Iniciando…</span>
+        <span id="pct">0%</span>
+      </div>
+      <div class="bar" id="bar"><i></i></div>
+      <button class="btn-quiet" id="parar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="6" y="6" width="12" height="12" rx="2" />
+        </svg>
+        Parar
+      </button>
+    </section>
+
+    <!-- estado 3: pronto ------------------------------------- -->
+    <section id="done" class="card hidden">
+      <div id="done-head">
+        <svg class="tique" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 6 9 17l-5-5" />
+        </svg>
+        Salvo em Downloads
+      </div>
+      <b class="truncate" id="done-file">—</b>
+      <span class="truncate dim" id="done-what"></span>
+      <span id="done-sub">—</span>
+      <div id="done-actions">
+        <button class="btn" id="open">Abrir</button>
+        <button class="btn" id="vscode" title="Abre o arquivo salvo no VS Code">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m9 6-6 6 6 6" />
+            <path d="m15 6 6 6-6 6" />
+          </svg>
+          VS Code
+        </button>
+        <button class="btn" id="dl-zip">Baixar ZIP</button>
+        <button class="btn" id="again">Clonar de novo</button>
+      </div>
+      <button class="btn btn-block" id="prompt" style="margin-top: 7px" title="Prompt em inglês, com a URL e o que quebrou, para reconstruir em React">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="9" y="9" width="12" height="12" rx="2" />
+          <path d="M5 15V5a2 2 0 0 1 2-2h8" />
+        </svg>
+        <span id="prompt-label">Copiar prompt para refazer em React</span>
+      </button>
+      <p class="dim" id="prompt-hint" style="margin: 6px 2px 0; font-size: 11.5px">
+        Em inglês, já com a URL do site, a stack detectada e a lista do que se
+        perdeu na cópia. Cole numa IA de código.
+      </p>
+    </section>
+
+    <div id="missing" class="hidden">
+      <b id="missing-count">0</b> <span id="missing-word">recursos</span> não vieram do servidor. A cópia
+      continua funcionando, mas esses itens só aparecem com internet.
+      <span id="missing-css" class="hidden">
+        <br /><b id="missing-css-count">0</b> deles são <b>folhas de estilo</b> — é o que faz a cópia
+        sair sem parte do visual. Veja quais em Detalhes.
+      </span>
+    </div>
+
+    <div id="fatal" class="hidden">
+      <div style="margin-bottom: 10px" id="fatal-msg"></div>
+      <button class="btn" id="retry">Tentar de novo</button>
+    </div>
+
+    <div>
+      <button class="btn-quiet" id="log-toggle" aria-expanded="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m9 6 6 6-6 6" />
+        </svg>
+        <span id="log-label">Detalhes</span>
+      </button>
+      <ul id="log" class="hidden"></ul>
+    </div>
+
+    <!-- o site aparecendo enquanto é copiado ------------------ -->
+    <section class="card janela hidden" id="preview-card">
+      <div class="janela-topo">
+        <span class="bolinhas"><i></i><i></i><i></i></span>
+        <span class="url truncate mono" id="preview-url">—</span>
+        <span class="selo" id="preview-selo"><b></b>copiando</span>
+      </div>
+      <div class="janela-vidro" id="preview-box">
+        <img id="preview-shot" class="hidden" alt="" />
+        <iframe id="preview" title="Prévia da cópia" sandbox="allow-same-origin"></iframe>
+        <div class="varredura"></div>
+        <div class="janela-vazia" id="preview-empty">
+          <img class="logo-clara" src="icons/apdev-white.png" alt="" />
+          <span id="preview-legenda">preparando a cópia…</span>
+        </div>
+      </div>
+    </section>
+
+    <script type="module" src="panel.js"></script>
+  </body>
+</html>

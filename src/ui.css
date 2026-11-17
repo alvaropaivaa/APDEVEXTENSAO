@@ -1,0 +1,636 @@
+/* Tema claro. Branco de verdade nos cartões, verde da marca só nos detalhes;
+   o fundo puxa um verde quase imperceptível para a borda do cartão branco ter
+   contra o que aparecer. As quatro variáveis --brand são o ponto de troca da
+   marca: src/marca.js sobrescreve elas em tempo de carga (white label). */
+:root {
+  --bg: #f6faf8;
+  --bg-glow: #e3f6ea;
+  --card: #ffffff;
+  --card-2: #f9fbfa;
+  --line: #e3eae6;
+  --line-soft: #eef2f0;
+  --text: #0f1c16;
+  --muted: #5b6b62;
+  --dim: #8a978f;
+  --brand: #16a34a;
+  --brand-hi: #22c55e;
+  --brand-deep: #166534;
+  --brand-wash: #e9f9ef;
+  --ok: #12a15a;
+  --ok-wash: #e8f8ef;
+  --warn: #a86a08;
+  --warn-wash: #fdf4e3;
+  --err: #d33a2f;
+  --err-wash: #fdeeec;
+  --r-sm: 9px;
+  --r: 13px;
+  --shadow: 0 1px 2px rgba(13, 40, 26, 0.05), 0 6px 18px rgba(13, 40, 26, 0.06);
+  --shadow-lift: 0 2px 4px rgba(13, 40, 26, 0.07), 0 12px 28px rgba(22, 163, 74, 0.14);
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  background-image: radial-gradient(680px 300px at 50% -160px, var(--bg-glow), transparent 70%);
+  color: var(--text);
+  font: 13.5px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1 {
+  margin: 0;
+  font-size: 14.5px;
+  font-weight: 680;
+  letter-spacing: -0.02em;
+}
+
+.mono {
+  font-family: "Cascadia Code", Consolas, "SF Mono", monospace;
+  font-size: 11.5px;
+}
+
+.muted {
+  color: var(--muted);
+}
+.dim {
+  color: var(--dim);
+}
+
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* ------------------------------------------------------- cartões */
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  box-shadow: var(--shadow);
+}
+
+/* ------------------------------------------------------- entradas */
+
+@keyframes surgir {
+  from {
+    opacity: 0;
+    transform: translateY(7px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Sai de display:none e a animação reinicia sozinha — é assim que cada
+   troca de estado do painel ganha entrada sem uma linha de JavaScript. */
+#idle,
+#running,
+#done,
+#fatal,
+#missing,
+#preview-card {
+  animation: surgir 0.3s var(--ease) both;
+}
+
+header,
+#target {
+  animation: surgir 0.4s var(--ease) both;
+}
+#target {
+  animation-delay: 0.06s;
+}
+
+/* Opção que não é liga/desliga: rótulo à esquerda, campo à direita. */
+.numero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 0;
+}
+
+.numero b {
+  display: block;
+  font-weight: 600;
+}
+
+.numero small {
+  display: block;
+  color: var(--muted);
+  font-size: 11.5px;
+  line-height: 1.45;
+  margin-top: 2px;
+}
+
+.numero input {
+  flex: none;
+  width: 64px;
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--card);
+  color: var(--text);
+  font: inherit;
+  text-align: center;
+}
+
+.numero input:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 1px;
+}
+
+/* ------------------------------------------------------- marca */
+
+.marca {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.marca .logo {
+  /* O wordmark já é verde e transparente: entra direto no branco do painel,
+     sem pastilha atrás. Altura fixa e largura livre — a logo de quem trocar a
+     marca pode ter outra proporção. */
+  height: 26px;
+  width: auto;
+  max-width: 132px;
+  flex: none;
+  animation: respirar 5s ease-in-out infinite;
+}
+
+@keyframes respirar {
+  0%,
+  100% {
+    filter: drop-shadow(0 2px 6px rgba(22, 163, 74, 0.2));
+  }
+  50% {
+    filter: drop-shadow(0 3px 12px rgba(22, 163, 74, 0.38));
+  }
+}
+
+.marca .tagline {
+  display: block;
+  color: var(--dim);
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* ------------------------------------------------------- botões */
+
+.btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 9px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--card);
+  color: var(--text);
+  font: inherit;
+  font-weight: 560;
+  cursor: pointer;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(13, 40, 26, 0.05);
+  transition: background 0.16s, border-color 0.16s, transform 0.12s var(--ease), box-shadow 0.16s;
+}
+
+.btn:hover:not(:disabled) {
+  background: var(--brand-wash);
+  border-color: #c7d8ff;
+  color: var(--brand-deep);
+  transform: translateY(-1px);
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--brand-hi), var(--brand) 55%, var(--brand-deep));
+  border-color: transparent;
+  color: #fff;
+  font-weight: 640;
+  box-shadow: 0 4px 14px rgba(22, 163, 74, 0.32);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #6b9bff, #3b78ff 55%, #1a4bc4);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: var(--shadow-lift);
+}
+
+/* Brilho que cruza o botão ao passar o mouse. */
+.btn-primary::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, 0.35) 50%, transparent 70%);
+  transform: translateX(-120%);
+}
+
+.btn-primary:hover:not(:disabled)::after {
+  animation: brilho 0.75s var(--ease);
+}
+
+@keyframes brilho {
+  to {
+    transform: translateX(120%);
+  }
+}
+
+.btn-block {
+  width: 100%;
+  padding: 11px;
+}
+
+.btn svg {
+  width: 15px;
+  height: 15px;
+  flex: none;
+}
+
+.btn-quiet {
+  background: none;
+  border: 0;
+  padding: 4px 0;
+  color: var(--muted);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: color 0.14s;
+}
+
+.btn-quiet:hover {
+  color: var(--brand);
+}
+
+.btn-quiet svg {
+  width: 12px;
+  height: 12px;
+  transition: transform 0.2s var(--ease);
+}
+
+.btn-quiet[aria-expanded="true"] svg {
+  transform: rotate(90deg);
+}
+
+/* ------------------------------------------------------- toggles */
+
+.toggle {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 7px 0;
+  cursor: pointer;
+}
+
+.toggle input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.toggle .track {
+  position: relative;
+  flex: none;
+  width: 30px;
+  height: 17px;
+  margin-top: 1px;
+  border-radius: 99px;
+  background: #dfe6f1;
+  border: 1px solid #d2dbe9;
+  transition: background 0.2s var(--ease), border-color 0.2s var(--ease);
+}
+
+.toggle .track::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(16, 26, 45, 0.25);
+  transition: transform 0.24s var(--ease);
+}
+
+.toggle input:checked + .track {
+  background: var(--brand);
+  border-color: var(--brand);
+}
+
+.toggle input:checked + .track::after {
+  transform: translateX(13px);
+}
+
+.toggle input:focus-visible + .track {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+.toggle b {
+  font-weight: 560;
+  font-size: 12.5px;
+}
+
+.toggle small {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+/* ------------------------------------------------------- progresso */
+
+.bar {
+  position: relative;
+  height: 5px;
+  border-radius: 99px;
+  background: #e6ecf6;
+  overflow: hidden;
+}
+
+/* O "Parar" fica discreto embaixo da barra: é saída de emergência, não a ação
+   principal — mas tem que estar visível o tempo todo enquanto a cópia anda. */
+#parar {
+  margin-top: 10px;
+}
+
+.bar i {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: 99px;
+  background: linear-gradient(90deg, var(--brand-deep), var(--brand), var(--brand-hi));
+  transition: width 0.35s var(--ease);
+}
+
+/* Listras correndo por cima: mostram que segue vivo mesmo com a barra parada
+   num passo demorado, como a varredura da página. */
+.bar i::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(
+    115deg,
+    transparent 25%,
+    rgba(255, 255, 255, 0.3) 25%,
+    rgba(255, 255, 255, 0.3) 50%,
+    transparent 50%,
+    transparent 75%,
+    rgba(255, 255, 255, 0.3) 75%
+  );
+  background-size: 22px 22px;
+  animation: listras 0.8s linear infinite;
+}
+
+@keyframes listras {
+  to {
+    background-position: 22px 0;
+  }
+}
+
+.spinner {
+  width: 13px;
+  height: 13px;
+  border: 2px solid #dbe3f0;
+  border-top-color: var(--brand);
+  border-radius: 50%;
+  animation: girar 0.7s linear infinite;
+  flex: none;
+}
+
+@keyframes girar {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ------------------------------------------- janela de pré-visualização */
+
+.janela {
+  overflow: hidden;
+  padding: 0;
+}
+
+.janela-topo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 11px;
+  background: var(--card-2);
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.janela-topo .bolinhas {
+  display: flex;
+  gap: 4px;
+  flex: none;
+}
+
+.janela-topo .bolinhas i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #dde4ef;
+}
+
+.janela-topo .url {
+  flex: 1;
+  color: var(--dim);
+  font-size: 11px;
+}
+
+.janela-topo .selo {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: 99px;
+  background: var(--brand-wash);
+  color: var(--brand-deep);
+  font-size: 10.5px;
+  font-weight: 620;
+}
+
+.janela-topo .selo b {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--brand);
+  animation: piscar 1.1s ease-in-out infinite;
+}
+
+@keyframes piscar {
+  50% {
+    opacity: 0.25;
+  }
+}
+
+/* Terminou de copiar: o selo vira verde e a bolinha para de piscar. */
+.janela:not(.copiando) .selo {
+  background: var(--ok-wash);
+  color: var(--ok);
+}
+
+.janela:not(.copiando) .selo b {
+  background: var(--ok);
+  animation: none;
+}
+
+/* O site vive numa moldura de 1280px reduzida por transform: assim ele aparece
+   como um site de verdade, e não espremido na largura do painel. */
+.janela-vidro {
+  position: relative;
+  height: 210px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.janela-vidro iframe {
+  border: 0;
+  transform-origin: top left;
+  display: block;
+}
+
+/* Foto ao vivo da aba, enquanto a varredura acontece. */
+.janela-vidro img#preview-shot {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  display: block;
+}
+
+.janela-vazia {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  background: linear-gradient(150deg, var(--brand-hi), var(--brand) 55%, var(--brand-deep));
+  color: #fff;
+}
+
+.janela-vazia img {
+  /* Aqui o fundo é o gradiente verde, então entra a versão clara da logo. */
+  width: 104px;
+  height: auto;
+  opacity: 0.95;
+  animation: flutuar 3.4s ease-in-out infinite;
+}
+
+@keyframes flutuar {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.janela-vazia span {
+  font-size: 11.5px;
+  font-weight: 560;
+  letter-spacing: 0.02em;
+  opacity: 0.92;
+}
+
+/* Faixa de luz varrendo, enquanto a cópia está sendo montada. */
+.varredura {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s;
+  background: linear-gradient(
+    to bottom,
+    transparent 40%,
+    rgba(22, 163, 74, 0.22) 50%,
+    transparent 60%
+  );
+  background-size: 100% 240%;
+}
+
+.janela.copiando .varredura {
+  opacity: 1;
+  animation: varrer 2.2s linear infinite;
+}
+
+.janela.copiando {
+  border-color: #a7e3bd;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1), var(--shadow);
+}
+
+@keyframes varrer {
+  from {
+    background-position: 0 -120%;
+  }
+  to {
+    background-position: 0 120%;
+  }
+}
+
+/* ------------------------------------------------------- conclusão */
+
+/* O tique é desenhado, não aparece pronto. */
+.tique path {
+  stroke-dasharray: 26;
+  stroke-dashoffset: 26;
+  animation: riscar 0.45s var(--ease) 0.12s forwards;
+}
+
+@keyframes riscar {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+#log li {
+  animation: surgir 0.22s var(--ease) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
